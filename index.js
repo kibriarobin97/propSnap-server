@@ -56,7 +56,53 @@ async function run() {
         }
         const count = await productCollection.countDocuments(query);
         res.send({ count });
-      });
+    });
+
+    app.get("/products", async (req, res) => {
+        const page = parseFloat(req.query.page);
+        const size = parseFloat(req.query.size);
+        const category = req.query.category;
+        const brand = req.query.brand;
+        const sortByPrice = req.query.sortByPrice;
+        const sortByDate = req.query.sortByDate;
+        const search = req.query.search || "";
+    
+        let priceRange = req.query.priceRange;
+        if (priceRange) {
+          priceRange = priceRange.split(",").map(Number);
+        }
+    
+        let query = {
+          productName: { $regex: search, $options: "i" },
+        };
+    
+        if (category) query.category = category;
+        if (brand) query.brandName = brand;
+    
+        if (priceRange && priceRange.length === 2) {
+          query.price = { $gte: priceRange[0], $lte: priceRange[1] };
+        }
+    
+        let options = {};
+        if (sortByPrice)
+          options = {
+            ...options.sort,
+            sort: { price: sortByPrice === "L2H" ? 1 : -1 },
+          };
+        if (sortByDate)
+          options = {
+            ...options.sort,
+            sort: {
+              creationDate: sortByDate === "new" ? -1 : 1,
+            },
+          };
+        const result = await productCollection
+          .find(query, options)
+          .skip(page * size)
+          .limit(size)
+          .toArray();
+        res.send(result);
+    });
 
 
 
