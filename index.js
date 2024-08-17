@@ -30,6 +30,36 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
+
+    const productCollection = client.db('prodSnapDB').collection('products');
+
+    app.get("/count", async (req, res) => {
+        const count = await productCollection.estimatedDocumentCount();
+        res.send({ amount: count });
+      });
+
+    app.get("/getCount", async (req, res) => {
+        const category = req.query.category;
+        const brand = req.query.brand;
+        const search = req.query.search || "";
+        let priceRange = req.query.priceRange;
+        if (priceRange) {
+          priceRange = priceRange.split(",").map(Number);
+        }
+        let query = {
+          productName: { $regex: search, $options: "i" },
+        };
+        if (category) query.category = category;
+        if (brand) query.brandName = brand;
+        if (priceRange && priceRange.length === 2) {
+          query.price = { $gte: priceRange[0], $lte: priceRange[1] };
+        }
+        const count = await productCollection.countDocuments(query);
+        res.send({ count });
+      });
+
+
+
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     // Send a ping to confirm a successful connection
