@@ -32,8 +32,8 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // await client.connect();
-    await client.connect();
-    console.log("Connected to MongoDB");
+    // await client.connect();
+    // console.log("Connected to MongoDB");
     const productCollection = client.db('prodSnap').collection('products');
 
     app.get("/count", async (req, res) => {
